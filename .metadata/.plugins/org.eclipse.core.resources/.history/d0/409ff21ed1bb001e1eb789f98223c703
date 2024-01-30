@@ -1,0 +1,88 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class CompareColoumns {
+
+    public static void main(String[] args) throws IOException {
+        // Load Excel file
+        FileInputStream file = new FileInputStream(new File("D://Selenium/TrailExcel.xlsx"));
+
+        // Create workbook instance
+        XSSFWorkbook workbook = new XSSFWorkbook(file);
+
+        // Specify the sheet and columns to compare
+        String sheetName = "TestSheet1";
+        int[] columnIndices = {2, 6,}; // Indices of columns to compare
+
+        // Get the sheet
+        XSSFSheet sheet = workbook.getSheet(sheetName);
+
+        // Compare columns and get differences
+        List<String> differences = compareExcelColumns(sheet, columnIndices);
+
+        // Create a new workbook for differences
+        XSSFWorkbook diffWorkbook = new XSSFWorkbook();
+        XSSFSheet diffSheet = diffWorkbook.createSheet(sheetName);
+
+        // Write differences to the new sheet
+        writeDifferencesToSheet(differences, diffSheet);
+
+        // Save the new workbook
+        try (FileOutputStream outputStream = new FileOutputStream("D://Selenium/abc3.xlsx")) {
+            diffWorkbook.write(outputStream);
+        }
+
+        // Close all resources
+     //   file.close();
+       // diffWorkbook.close();
+
+        System.out.println("Differences written to a new Excel file.");
+    }
+    
+
+    private static List<String> compareExcelColumns(XSSFSheet sheet, int[] columnIndices) {
+        List<String> differences = new ArrayList<>();
+
+        // Iterate through rows to compare column values
+        Iterator<Row> iterator = sheet.iterator();
+
+        while (iterator.hasNext()) {
+            Row row = iterator.next();
+
+            StringBuilder differenceBuilder = new StringBuilder();
+            for (int columnIndex : columnIndices) {
+                Cell cell = row.getCell(columnIndex);
+                differenceBuilder.append("Column").append(columnIndex).append(": ").append(cell.toString()).append(", ");
+            }
+
+            // Remove trailing comma and space
+            String difference = differenceBuilder.toString().trim();
+            if (difference.endsWith(",")) {
+                difference = difference.substring(0, difference.length() - 1);
+            }
+
+            differences.add(difference);
+        }
+
+        return differences;
+    }
+
+    private static void writeDifferencesToSheet(List<String> differences, XSSFSheet diffSheet) {
+        int rownum = 0;
+        for (String diff : differences) {
+            Row row = diffSheet.createRow(rownum++);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(diff);
+        }
+    }
+}

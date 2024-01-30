@@ -1,0 +1,107 @@
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+
+public class Trial {
+	   private static StringBuilder consoleOutput = new StringBuilder();
+    public static void main(String[] args) {
+        // Set the path to your ChromeDriver executable
+        //System.setProperty("webdriver.chrome.driver", "D:/Selenium/chromedriver.exe");
+  //      WebDriver driver = new ChromeDriver();
+      //  driver.get("www.google.com");
+
+        try {
+            // Load Excel file
+            FileInputStream file = new FileInputStream("D://Selenium/Result1.xlsx");
+            Workbook workbook = new XSSFWorkbook(file);
+
+            // Specify sheet names
+            String sheetName1 = "TestSheet1";
+            String sheetName2 = "TestSheet2";
+
+            // Get sheets
+            Sheet sheet1 = workbook.getSheet(sheetName1);
+            Sheet sheet2 = workbook.getSheet(sheetName2);
+            
+            captureConsoleOutput(() -> {
+            // Loop through rows and columns
+            for (int i = 2; i < sheet1.getPhysicalNumberOfRows(); i++) {
+                Row row1 = sheet1.getRow(i);
+                Row row2 = sheet2.getRow(i);
+
+                for (int j = 0; j < row1.getPhysicalNumberOfCells(); j++) {
+                    Cell cell1 = row1.getCell(j);
+                    Cell cell2 = row2.getCell(j);
+
+                    // Compare cell values
+                    if (!cell1.toString().equals(cell2.toString())) {
+                        // Highlight the difference - You may need to implement the logic to highlight here
+                        // For simplicity, let's just print the details
+                        System.out.println("Difference found at Sheet1[" + i + "][" + j + "]: " + cell1 + ", Sheet2[" + i + "][" + j + "]: " + cell2);
+                    }
+               //    writeConsoleOutputToExcel("D://Selenium/abc.xlsx");
+                }
+                writeConsoleOutputToExcel("D://Selenium/abc.xlsx");
+              
+            }
+            });
+            
+
+            // Close the workbook
+          //  workbook.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Close the WebDriver
+            //driver.quit();
+        }
+        
+    }
+    
+    private static void captureConsoleOutput(Runnable codeToRun) {
+        System.setOut(new java.io.PrintStream(System.out) {
+            public void println(String message) {
+                super.println(message);
+                consoleOutput.append(message).append("\n");
+            }
+        });
+
+        // Run the provided code, which may include System.out.println statements
+        codeToRun.run();
+    }
+	private static void writeConsoleOutputToExcel(String file) {
+		// TODO Auto-generated method stub
+		try {
+            // Create a new Excel workbook
+            Workbook workbook = new XSSFWorkbook();
+            // Create a sheet
+            Sheet sheet = workbook.createSheet("Results");
+
+            // Split the console output into lines and write to Excel
+            String[] lines = consoleOutput.toString().split("\n");
+            for (int k = 0; k < lines.length; k++) {
+                Row row = sheet.createRow(k);
+                Cell cell = row.createCell(0);
+                cell.setCellValue(lines[k]);
+            }
+
+            // Save the workbook to a file
+            try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                workbook.write(fileOut);
+            }
+
+            // Close the workbook
+            workbook.close();
+           
+           // System.out.println("Console output written to Excel successfully!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+		
+	}
+}
